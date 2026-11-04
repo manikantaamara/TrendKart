@@ -164,7 +164,7 @@ export async function fetchShopOrders(shopId: string): Promise<Order[]> {
   return data || [];
 }
 
-export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<Order | null> {
+export async function updateOrderStatus(orderId: string, status: Order['status'], reason?: string): Promise<Order | null> {
   const { data: updated, error } = await supabase.from('orders').update({ status }).eq('id', orderId).select().single();
   if (error || !updated) return null;
 
@@ -187,7 +187,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
         await supabase.from('inventory').update({ stock_quantity: invList[0].stock_quantity + item.quantity }).eq('id', invList[0].id);
       }
     }
-    await supabase.from('notifications').insert({ user_id: updated.customer_id, title: '❌ Order Cancelled', message: `Order #${updated.order_number} was cancelled.`, type: 'order_cancelled' });
+    await supabase.from('notifications').insert({ user_id: updated.customer_id, title: '❌ Order Cancelled', message: reason || `Order #${updated.order_number} was cancelled.`, type: 'order_cancelled' });
   }
 
   if (status === 'ready_for_pickup') {
